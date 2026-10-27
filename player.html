@@ -68,6 +68,8 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .pose small { font-weight: 400; color: var(--muted); font-variant-numeric: tabular-nums; }
 .pose[aria-pressed="true"] small { color: inherit; opacity: .85; }
 .hint { color: var(--muted); font-size: .9rem; margin: 0; max-width: 65ch; }
+.tip { margin: 0; padding: 8px 12px; border-radius: 6px; background: var(--accent); color: var(--accent-fg); font-size: .9rem; }
+.tip[hidden] { display: none; }
 </style>
 </head>
 <body>
@@ -98,6 +100,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
       </div>
       <span class="now" id="now"></span>
     </div>
+    <p class="tip" id="tip" hidden>Телефон не даёт запускать видео со страницы, пока его ни разу не включали. Нажми ▶ в самом видео один раз — дальше кнопки заработают.</p>
   </section>
 
   <p class="hint">Тап по номеру — видео переходит к этой позе: на паузе встаёт на неё, во время проигрывания играет дальше с неё. ◀ ▶ — соседние позы (на компьютере — стрелки).
@@ -135,12 +138,27 @@ function mark(i) {
   store.set('sd-pose', String(i));
 }
 
+// мобильные браузеры блокируют playVideo() до первого касания самого плеера
+const tip = document.getElementById('tip');
+function checkPlaying() {
+  setTimeout(() => {
+    const s = player.getPlayerState();
+    tip.hidden = s === YT.PlayerState.PLAYING || s === YT.PlayerState.BUFFERING;
+  }, 1500);
+}
+
 function go(i) {
   i = Math.max(0, Math.min(POSES.length - 1, i));
   mark(i);
   stopAt = null;
   if (!ready) return;
-  const playing = player.getPlayerState() === YT.PlayerState.PLAYING;
+  const state = player.getPlayerState();
+  // видео ещё не запускали: заставка с ▶, старт с этой позы (перемотка дала бы чёрный экран)
+  if (state === YT.PlayerState.UNSTARTED || state === YT.PlayerState.CUED) {
+    player.cueVideoById({ videoId: VIDEO, startSeconds: POSES[i] });
+    return;
+  }
+  const playing = state === YT.PlayerState.PLAYING;
   player.seekTo(POSES[i], true);
   if (!playing) player.pauseVideo();
 }
@@ -153,6 +171,7 @@ document.getElementById('step').onclick = () => {
   player.seekTo(POSES[cur], true);
   stopAt = { t: nxt, i: Math.min(cur + 1, POSES.length - 1) };
   player.playVideo();
+  checkPlaying();
 };
 document.addEventListener('keydown', e => {
   if (e.key === 'ArrowLeft') go(cur - 1);
@@ -182,8 +201,8 @@ function onYouTubeIframeAPIReady() {
     videoId: VIDEO,
     playerVars: { start: Math.floor(POSES[cur]), playsinline: 1, rel: 0, modestbranding: 1 },
     events: {
-      onReady: () => { ready = true; player.seekTo(POSES[cur], true); player.pauseVideo(); },
-      onStateChange: e => { if (e.data === YT.PlayerState.PLAYING) player.setPlaybackRate(rate); },
+      onReady: () => { ready = true; },
+      onStateChange: e => { if (e.data === YT.PlayerState.PLAYING) { player.setPlaybackRate(rate); tip.hidden = true; } },
     },
   });
 }
