@@ -96,7 +96,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 <div class="wrap locked" id="wrap">
   <header>
     <h1>Sweet Dreams — позы</h1>
-    <p class="sub">82 позы по порядку, отрезок 0:08–1:09. Кадры из видео
+    <p class="sub">Позы по порядку, отрезок 0:08–1:09; между 43 и 49 — промежуточные (43.1, 43.2…). Кадры из видео
       <a href="https://youtu.be/dRewnIJosuo" target="_blank" rel="noopener">Sweet dreams — LUAM Choreography, GH5 Dance Studio</a>.
       Тап по кадру — на весь экран; таймкод — этот момент в ролике.</p>
   </header>
@@ -125,7 +125,9 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 <script>
 const VIDEO = 'dRewnIJosuo';
-const TIMES = [8.17,8.77,9.77,10.70,11.70,12.57,13.50,14.37,15.13,15.90,16.43,17.23,18.03,18.87,19.70,20.43,21.06,21.70,22.30,22.77,23.43,24.23,24.77,25.57,26.10,26.63,27.10,27.97,28.60,29.23,29.70,30.37,31.30,31.97,32.63,33.30,33.70,34.17,34.70,35.63,36.17,37.10,38.30,39.10,40.03,40.97,41.90,42.83,43.50,44.37,44.90,45.63,46.30,47.43,48.50,49.37,50.03,50.70,51.34,51.97,52.83,53.77,54.44,55.10,56.17,56.57,57.37,58.30,59.10,59.68,60.25,60.83,61.83,62.43,63.03,63.63,64.83,65.50,66.17,67.10,67.57,68.37];
+// [метка, секунда]; 43.1 и т.п. — промежуточные позы
+const POSES = [["1",8.17],["2",8.77],["3",9.77],["4",10.70],["5",11.70],["6",12.57],["7",13.50],["8",14.37],["9",15.13],["10",15.90],["11",16.43],["12",17.23],["13",18.03],["14",18.87],["15",19.70],["16",20.43],["17",21.06],["18",21.70],["19",22.30],["20",22.77],["21",23.43],["22",24.23],["23",24.77],["24",25.57],["25",26.10],["26",26.63],["27",27.10],["28",27.97],["29",28.60],["30",29.23],["31",29.70],["32",30.37],["33",31.30],["34",31.97],["35",32.63],["36",33.30],["37",33.70],["38",34.17],["39",34.70],["40",35.63],["41",36.17],["42",37.10],["43",38.30],["43.1",38.50],["43.2",38.70],["43.3",38.90],["44",39.10],["44.1",39.30],["44.2",39.50],["44.3",39.70],["45",40.03],["45.1",40.30],["45.2",40.50],["45.3",40.70],["46",40.97],["46.1",41.30],["46.2",41.50],["47",41.90],["47.1",42.10],["47.2",42.30],["47.3",42.50],["48",42.83],["48.1",43.10],["48.2",43.30],["49",43.50],["50",44.37],["51",44.90],["52",45.63],["53",46.30],["54",47.43],["55",48.50],["56",49.37],["57",50.03],["58",50.70],["59",51.34],["60",51.97],["61",52.83],["62",53.77],["63",54.44],["64",55.10],["65",56.17],["66",56.57],["67",57.37],["68",58.30],["69",59.10],["70",59.68],["71",60.25],["72",60.83],["73",61.83],["74",62.43],["75",63.03],["76",63.63],["77",64.83],["78",65.50],["79",66.17],["80",67.10],["81",67.57],["82",68.37]];
+const TIMES = POSES.map(p => p[1]);
 
 const fmt = s => { const m = Math.floor(s / 60); return m + ':' + (s - m * 60).toFixed(1).padStart(4, '0').replace('.', ','); };
 let IMGS = [];
@@ -162,8 +164,8 @@ function build() {
 TIMES.forEach((t, i) => {
   const f = document.createElement('figure');
   f.className = 'card'; f.id = 'p' + (i + 1);
-  f.innerHTML = `<button aria-label="Поза ${i + 1} на весь экран"><img src="${src(i)}" alt="Поза ${i + 1}" loading="lazy" width="800" height="450"></button>
-    <figcaption><b>${i + 1}</b><a href="https://youtu.be/${VIDEO}?t=${Math.floor(t)}" target="_blank" rel="noopener">${fmt(t)}</a></figcaption>`;
+  f.innerHTML = `<button aria-label="Поза ${POSES[i][0]} на весь экран"><img src="${src(i)}" alt="Поза ${POSES[i][0]}" loading="lazy" width="800" height="450"></button>
+    <figcaption><b>${POSES[i][0]}</b><a href="https://youtu.be/${VIDEO}?t=${Math.floor(t)}" target="_blank" rel="noopener">${fmt(t)}</a></figcaption>`;
   f.querySelector('button').onclick = () => open(i);
   grid.append(f);
 });
@@ -188,8 +190,8 @@ let cur = 0;
 function show(i) {
   cur = Math.max(0, Math.min(TIMES.length - 1, i));
   document.getElementById('vimg').src = src(cur);
-  document.getElementById('vimg').alt = 'Поза ' + (cur + 1);
-  document.getElementById('vn').textContent = cur + 1 + ' / ' + TIMES.length;
+  document.getElementById('vimg').alt = 'Поза ' + POSES[cur][0];
+  document.getElementById('vn').textContent = POSES[cur][0];
   document.getElementById('vt').textContent = fmt(TIMES[cur]);
   if (cur + 1 < TIMES.length) new Image().src = src(cur + 1);
 }
