@@ -100,7 +100,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     </div>
   </section>
 
-  <p class="hint">Тап по номеру — видео встаёт на паузу на этой позе. ◀ ▶ — соседние позы (на компьютере — стрелки).
+  <p class="hint">Тап по номеру — видео переходит к этой позе: на паузе встаёт на неё, во время проигрывания играет дальше с неё. ◀ ▶ — соседние позы (на компьютере — стрелки).
     «Переход» проигрывает путь от текущей позы до следующей и снова останавливается.</p>
   <nav class="poses" id="poses" aria-label="Позы"></nav>
 </div>
@@ -139,7 +139,10 @@ function go(i) {
   i = Math.max(0, Math.min(POSES.length - 1, i));
   mark(i);
   stopAt = null;
-  if (ready) { player.seekTo(POSES[i], true); player.pauseVideo(); }
+  if (!ready) return;
+  const playing = player.getPlayerState() === YT.PlayerState.PLAYING;
+  player.seekTo(POSES[i], true);
+  if (!playing) player.pauseVideo();
 }
 
 document.getElementById('prev').onclick = () => go(cur - 1);
